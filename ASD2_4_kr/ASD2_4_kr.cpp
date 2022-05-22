@@ -1,18 +1,35 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <math.h>
 
 using namespace std;
 
 //funckja liczaca szukany hash
-int Hash_wanted(int pn, int base, string wzorzec) {
+int Hash_wanted(string wzorzec) {
 
-    if (wzorzec.size() > 0)
-        int temporary = wzorzec[0];
+    int pn = 151, base = 256;
+    base %= pn;
+    long long int temporary = int(wzorzec[0]);
 
-    for (size_t i = 0; i < wzorzec.size(); i++) {
-        int(wzorzec[i])*base+wzorzec[i+1]
-    }
+    for (size_t i = 0; i < wzorzec.size() - 1; i++) 
+        temporary = (temporary * base + int(wzorzec[i + 1])) % pn;
+    
+    return temporary;
+}
+
+int Hash(int hash, int previous, int next, int  wzorzec_size) {
+    
+    int pn = 151, base = 256;
+    base %= pn;
+    long long int temporary;
+    long long int power = pow(base, wzorzec_size - 1);
+
+    temporary = hash - ((previous * power % pn) % pn);
+    if (temporary < 0)
+        temporary += pn;
+    
+    return (temporary * base + next) % pn;
 }
 
 int main()
@@ -34,22 +51,42 @@ int main()
         string text;
         getline(file, text);
 
-        //pn - liczba pierwsza, base- podstawa do wyliczania hash
-        int pn = 151, base = 256;
-        base %= pn;
+        if (wzorzec.size() > 0 || wzorzec.size() > text.size()) {
 
-        if (wzorzec.size() == 0) {
-            if (n-- > 0)
-                cout << '\n';
-            
-        }
-        else {
+            int hash_wanted;
+            hash_wanted = Hash_wanted(wzorzec);
+            int wzorzec_size = wzorzec.size();
+            string ancillary = text.substr(0, wzorzec_size);
+            int hash = Hash_wanted(ancillary);
 
-            Hash_wanted(pn, base, wzorzec);
+            for (size_t i = 0; i < text.size() - wzorzec_size + 1; i++) {
+                
+                if (i != 0)
+                    hash = Hash(hash, int(text[i - 1]), int(text[i + wzorzec_size - 1]), wzorzec_size);
+
+                if (hash == hash_wanted) {
+                    
+                    bool check = true;
+                    //sprawdza czy ciagi znakow sa sobie rowne
+                    for (size_t j = 0; j < wzorzec_size; j++) {
+                        if (text[i + j] != wzorzec[j]) {
+                            check = false;
+                            break;
+                        }
+                    }
+
+                    if (check)
+                        cout << i << ' ';
+                }
+
+                
+            }
         }
 
 
         file.close();
         n--;
+        if (n)
+            cout << '\n';
     }
 }
